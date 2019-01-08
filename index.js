@@ -19,7 +19,7 @@ server.get("/api/posts", (req, res) => {
     .catch(err => {
       res
         .status(500)
-        .json({ error: "The post information could not be retrieved." });
+        .json({ error: "The posts information could not be retrieved." });
     });
 });
 
@@ -69,21 +69,30 @@ server.delete("/api/posts/:id", (req, res) => {
 
 server.post("/api/posts", (req, res) => {
   const postInfo = req.body;
-  db.insert(postInfo)
-    .then(result => {
-      db.findById(result.id)
-        .then(post => {
-          res.status(201).json(post);
-        })
-        .catch(err => {
-          res
-            .status(500)
-            .json({ error: "failed to get post by id", error: err });
-        });
-    })
-    .catch(err =>
-      res.status(500).json({ error: "failed to post", error: err })
-    );
+  console.log(postInfo);
+  if (postInfo.title && postInfo.contents) {
+    db.insert(postInfo)
+      .then(result => {
+        db.findById(result.id)
+          .then(post => {
+            res.status(201).json(post);
+          })
+          .catch(err => {
+            res.status(404).json({
+              message: "The post with the specified ID does not exist."
+            });
+          });
+      })
+      .catch(err =>
+        res.status(500).json({ error: "failed to post", error: err })
+      );
+  } else {
+    res
+      .status(400)
+      .json({
+        errorMessage: "Please provide title and contents for the post."
+      });
+  }
 });
 
 //UPDATE post by ID
