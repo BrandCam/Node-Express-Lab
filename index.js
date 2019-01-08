@@ -69,7 +69,6 @@ server.delete("/api/posts/:id", (req, res) => {
 
 server.post("/api/posts", (req, res) => {
   const postInfo = req.body;
-  console.log(postInfo);
   if (postInfo.title && postInfo.contents) {
     db.insert(postInfo)
       .then(result => {
@@ -84,30 +83,44 @@ server.post("/api/posts", (req, res) => {
           });
       })
       .catch(err =>
-        res.status(500).json({ error: "failed to post", error: err })
+        res.status(500).json({
+          error: "There was an error while saving the post to the database"
+        })
       );
   } else {
-    res
-      .status(400)
-      .json({
-        errorMessage: "Please provide title and contents for the post."
-      });
+    res.status(400).json({
+      errorMessage: "Please provide title and contents for the post."
+    });
   }
 });
 
 //UPDATE post by ID
 
-server.put("/api/posts/:id", (req, res) => {
+server.put("/api/posts/:id", async (req, res) => {
   const id = req.params.id;
-  const changes = req.body;
-  db.update(id, changes)
-    .then(count => {
-      console.log(count);
-      res.status(200).json(count);
-    })
-    .catch(err =>
-      res.status(500).json({ error: "failed to update", error: err })
-    );
-});
+  const updatedObject = req.body;
 
+  try {
+    const post = await db.findById(id);
+
+    if (!post.length) {
+      res
+        .status(404)
+        .json({ message: "The post with the specified ID does not exist." });
+    } else {
+      const count = await db.update(id, updatedObject);
+      if (!count) {
+        res.status(400).json({
+          errorMessage: "Please provide title and contents for the post."
+        });
+      } else {
+        res.status(200).json(updatedObject);
+      }
+    }
+  } catch (err) {
+    res
+      .status(500)
+      .json({ error: "The post information could not be modified." });
+  }
+});
 server.listen(3333, () => console.log("server running"));
