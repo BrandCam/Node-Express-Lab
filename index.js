@@ -9,6 +9,8 @@ const server = express();
 //middleware
 server.use(express.json());
 
+//GET posts
+
 server.get("/api/posts", (req, res) => {
   db.find()
     .then(post => {
@@ -20,6 +22,8 @@ server.get("/api/posts", (req, res) => {
         .json({ error: "The post information could not be retrieved." });
     });
 });
+
+//GET post by post ID
 
 server.get("/api/posts/:id", (req, res) => {
   const id = req.params.id;
@@ -38,6 +42,8 @@ server.get("/api/posts/:id", (req, res) => {
       res.status(500).json({ error: "The post could not be retreved" });
     });
 });
+
+//DELETE post
 
 server.delete("/api/posts/:id", (req, res) => {
   const id = req.params.id;
@@ -59,9 +65,10 @@ server.delete("/api/posts/:id", (req, res) => {
     });
 });
 
+//CREATE post
+
 server.post("/api/posts", (req, res) => {
   const postInfo = req.body;
-  console.log(postInfo);
   db.insert(postInfo)
     .then(result => {
       db.findById(result.id)
@@ -78,4 +85,20 @@ server.post("/api/posts", (req, res) => {
       res.status(500).json({ error: "failed to post", error: err })
     );
 });
+
+//UPDATE post by ID
+
+server.put("/api/posts/:id", (req, res) => {
+  const id = req.params.id;
+  const changes = req.body;
+  db.update(id, changes)
+    .then(count => {
+      console.log(count);
+      res.status(200).json(count);
+    })
+    .catch(err =>
+      res.status(500).json({ error: "failed to update", error: err })
+    );
+});
+
 server.listen(3333, () => console.log("server running"));
